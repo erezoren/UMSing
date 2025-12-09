@@ -1,11 +1,175 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
-    <title>My Static Page</title>
-  </head>
-  <body>
-    <h1>Hello from GitHub Pages!</h1>
-    <p>This is my static site.</p>
-  </body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMSing - Audio Player</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, sans-serif;
+        }
+
+        .play-button {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            box-shadow:
+                0 10px 30px rgba(46, 204, 113, 0.4),
+                inset 0 -5px 15px rgba(0, 0, 0, 0.2),
+                inset 0 5px 15px rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-button:hover {
+            transform: scale(1.05);
+            box-shadow:
+                0 15px 40px rgba(46, 204, 113, 0.6),
+                inset 0 -5px 15px rgba(0, 0, 0, 0.2),
+                inset 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .play-button:active {
+            transform: scale(0.95);
+            box-shadow:
+                0 5px 15px rgba(46, 204, 113, 0.3),
+                inset 0 5px 15px rgba(0, 0, 0, 0.3),
+                inset 0 -5px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .play-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(255, 255, 255, 0.1),
+                transparent
+            );
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+
+        .speaker-icon {
+            width: 70px;
+            height: 70px;
+            fill: white;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <button class="play-button" id="playButton" aria-label="Play random audio">
+        <svg class="speaker-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        </svg>
+    </button>
+
+    <script>
+        // Configuration: Set your remote base URL here
+        const REMOTE_BASE_URL = 'audio/';
+
+        let audioFiles = [];
+        let currentAudio = null;
+
+        // Fetch audio files list from remote JSON file
+        async function loadAudioFiles() {
+            try {
+                // Fetch the list of files from a remote JSON file
+                const response = await fetch(REMOTE_BASE_URL + 'files.json');
+                const data = await response.json();
+                audioFiles = data.files.map(file => REMOTE_BASE_URL + file);
+                console.log(`Loaded ${audioFiles.length} audio files from remote location`);
+            } catch (error) {
+                console.error('Error loading audio files:', error);
+                console.log('Falling back to local audio directory');
+                // Fallback: Use local files if remote fails
+                loadLocalAudioFiles();
+            }
+        }
+
+        // Fallback: Load local audio files
+        function loadLocalAudioFiles() {
+            audioFiles = [
+                'audio/bell.mp3',
+                'audio/bread.mp3',
+                'audio/meeting.mp3',
+                'audio/wa.mp3',
+                'audio/zohar1.mp3',
+                'audio/zohar2.mp3',
+                'audio/zohar3.mp3',
+                'audio/zohar4.mp3',
+                'audio/zohar5.mp3',
+                'audio/zohar6.mp3',
+                'audio/zohar7.mp3',
+                'audio/zohar8.mp3',
+                'audio/zohar9.mp3',
+                'audio/zohar10.mp3',
+                'audio/zohar11.mp3',
+                'audio/zohar12.mp3'
+            ];
+            console.log(`Using ${audioFiles.length} local audio files`);
+        }
+
+        // Get random audio file
+        function getRandomAudio() {
+            if (audioFiles.length === 0) {
+                console.warn('No audio files available');
+                return null;
+            }
+            const randomIndex = Math.floor(Math.random() * audioFiles.length);
+            return audioFiles[randomIndex];
+        }
+
+        // Play button click handler
+        document.getElementById('playButton').addEventListener('click', function() {
+            // Stop current audio if playing
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+
+            // Create and play new audio
+            const randomAudioFile = getRandomAudio();
+            if (randomAudioFile) {
+                currentAudio = new Audio(randomAudioFile);
+                currentAudio.play().catch(error => {
+                    console.error('Error playing audio:', error);
+                });
+            }
+        });
+
+        // Load audio files when page loads
+        loadAudioFiles();
+    </script>
+</body>
 </html>
