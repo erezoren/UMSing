@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Thumbnail</title>
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        canvas {
+            border: 2px solid #333;
+            display: block;
+            margin: 20px auto;
+            background: white;
+        }
+        .buttons {
+            text-align: center;
+            margin: 20px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .instructions {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h1>UMSing Thumbnail Generator</h1>
+        <p>This will create a thumbnail image for WhatsApp link previews.</p>
+        <ol>
+            <li>The canvas below shows your thumbnail preview</li>
+            <li>Click "Download Thumbnail" to save it</li>
+            <li>Save it as <strong>thumbnail.png</strong> in your UMSing folder</li>
+        </ol>
+    </div>
+
+    <canvas id="canvas" width="1200" height="630"></canvas>
+
+    <div class="buttons">
+        <button onclick="downloadThumbnail()">Download Thumbnail</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function drawThumbnail() {
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            // Draw speaker icon with shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 8;
+
+            // Speaker body
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.moveTo(450, 250);
+            ctx.lineTo(520, 250);
+            ctx.lineTo(600, 200);
+            ctx.lineTo(600, 430);
+            ctx.lineTo(520, 380);
+            ctx.lineTo(450, 380);
+            ctx.closePath();
+            ctx.fill();
+
+            // Sound waves
+            ctx.shadowBlur = 5;
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                const baseX = 650 + i * 50;
+                const baseRadius = 40 + i * 25;
+                ctx.arc(baseX, 315, baseRadius, -Math.PI/4, Math.PI/4, false);
+                ctx.lineWidth = 20;
+                ctx.strokeStyle = 'white';
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+
+            // Reset shadow for text
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 5;
+
+            // Title text
+            ctx.font = 'bold 140px Arial, sans-serif';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('UMSing', 600, 520);
+
+            // Subtitle
+            ctx.font = '40px Arial, sans-serif';
+            ctx.shadowBlur = 5;
+            ctx.fillText('Listen to this Zoharon!', 600, 590);
+        }
+
+        function downloadThumbnail() {
+            const link = document.createElement('a');
+            link.download = 'thumbnail.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Draw on load
+        drawThumbnail();
+    </script>
+</body>
+</html>
+
