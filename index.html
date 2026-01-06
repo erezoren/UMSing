@@ -9,11 +9,13 @@
             margin: 0;
             padding: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: Arial, sans-serif;
+            gap: 30px;
         }
 
         .play-button {
@@ -35,23 +37,79 @@
             overflow: hidden;
         }
 
-        .play-button:hover {
+        .play-button.pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow:
+                    0 10px 30px rgba(46, 204, 113, 0.4),
+                    inset 0 -5px 15px rgba(0, 0, 0, 0.2),
+                    inset 0 5px 15px rgba(255, 255, 255, 0.3);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow:
+                    0 20px 50px rgba(46, 204, 113, 0.8),
+                    inset 0 -5px 15px rgba(0, 0, 0, 0.2),
+                    inset 0 5px 15px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .speaker-icon {
+            width: 70px;
+            height: 70px;
+            fill: white;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+            position: relative;
+            z-index: 1;
+        }
+
+        .share-button {
+            padding: 18px 40px;
+            border-radius: 50px;
+            border: none;
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            box-shadow:
+                0 10px 30px rgba(52, 152, 219, 0.4),
+                inset 0 -5px 15px rgba(0, 0, 0, 0.2),
+                inset 0 5px 15px rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .share-button.visible {
+            display: flex;
+        }
+
+        .share-button:hover {
             transform: scale(1.05);
             box-shadow:
-                0 15px 40px rgba(46, 204, 113, 0.6),
+                0 15px 40px rgba(52, 152, 219, 0.6),
                 inset 0 -5px 15px rgba(0, 0, 0, 0.2),
                 inset 0 5px 15px rgba(255, 255, 255, 0.3);
         }
 
-        .play-button:active {
+        .share-button:active {
             transform: scale(0.95);
             box-shadow:
-                0 5px 15px rgba(46, 204, 113, 0.3),
+                0 5px 15px rgba(52, 152, 219, 0.3),
                 inset 0 5px 15px rgba(0, 0, 0, 0.3),
                 inset 0 -5px 15px rgba(255, 255, 255, 0.1);
         }
 
-        .play-button::before {
+        .share-button::before {
             content: '';
             position: absolute;
             top: -50%;
@@ -68,18 +126,9 @@
             animation: shine 3s infinite;
         }
 
-        @keyframes shine {
-            0% {
-                transform: translateX(-100%) translateY(-100%) rotate(45deg);
-            }
-            100% {
-                transform: translateX(100%) translateY(100%) rotate(45deg);
-            }
-        }
-
-        .speaker-icon {
-            width: 70px;
-            height: 70px;
+        .share-icon {
+            width: 24px;
+            height: 24px;
             fill: white;
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
             position: relative;
@@ -94,12 +143,21 @@
         </svg>
     </button>
 
+    <button class="share-button" id="shareButton" aria-label="Share the Zoharon">
+        <svg class="share-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+        </svg>
+        <span style="position: relative; z-index: 1;">Share the Zoharon</span>
+    </button>
+
     <script>
         // Configuration: Set your remote base URL here
         const REMOTE_BASE_URL = 'audio/';
 
         let audioFiles = [];
         let currentAudio = null;
+        let currentAudioFile = null;
+        let pendingSharedFile = null; // Store the shared file to play after user interaction
 
         // Fetch audio files list from remote JSON file
         async function loadAudioFiles() {
@@ -109,6 +167,9 @@
                 const data = await response.json();
                 audioFiles = data.files.map(file => REMOTE_BASE_URL + file);
                 console.log(`Loaded ${audioFiles.length} audio files from remote location`);
+
+                // Check if there's a file parameter in the URL
+                checkForSharedFile();
             } catch (error) {
                 console.error('Error loading audio files:', error);
                 console.log('Falling back to local audio directory');
@@ -138,6 +199,43 @@
                 'audio/zohar12.mp3'
             ];
             console.log(`Using ${audioFiles.length} local audio files`);
+
+            // Check if there's a file parameter in the URL
+            checkForSharedFile();
+        }
+
+        // Check if there's a shared file in the URL parameters
+        function checkForSharedFile() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sharedFile = urlParams.get('file');
+
+            if (sharedFile) {
+                console.log('Shared file detected:', sharedFile);
+                // Store the file to play when user clicks the button
+                pendingSharedFile = sharedFile;
+
+                // Add pulse animation to attract user attention
+                const playButton = document.getElementById('playButton');
+                playButton.classList.add('pulse');
+            }
+        }
+
+        // Play a specific audio file
+        function playSpecificFile(filePath) {
+            // Stop current audio if playing
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+
+            currentAudioFile = filePath;
+            currentAudio = new Audio(filePath);
+            currentAudio.play().catch(error => {
+                console.error('Error playing audio:', error);
+            });
+
+            // Show the share button
+            document.getElementById('shareButton').classList.add('visible');
         }
 
         // Get random audio file
@@ -152,6 +250,16 @@
 
         // Play button click handler
         document.getElementById('playButton').addEventListener('click', function() {
+            // Remove pulse animation if present
+            this.classList.remove('pulse');
+
+            // Check if there's a pending shared file to play
+            if (pendingSharedFile) {
+                playSpecificFile(pendingSharedFile);
+                pendingSharedFile = null; // Clear it after playing
+                return;
+            }
+
             // Stop current audio if playing
             if (currentAudio) {
                 currentAudio.pause();
@@ -161,10 +269,32 @@
             // Create and play new audio
             const randomAudioFile = getRandomAudio();
             if (randomAudioFile) {
+                currentAudioFile = randomAudioFile;
                 currentAudio = new Audio(randomAudioFile);
                 currentAudio.play().catch(error => {
                     console.error('Error playing audio:', error);
                 });
+
+                // Show the share button
+                document.getElementById('shareButton').classList.add('visible');
+            }
+        });
+
+        // Share button click handler
+        document.getElementById('shareButton').addEventListener('click', function() {
+            if (currentAudioFile) {
+                // Get the base URL (without any existing query parameters)
+                const baseUrl = window.location.origin + window.location.pathname;
+
+                // Create the shareable URL with the file parameter
+                const shareableUrl = `${baseUrl}?file=${encodeURIComponent(currentAudioFile)}`;
+
+                // Create WhatsApp share message
+                const message = encodeURIComponent(`UMSing\n${shareableUrl}`);
+                const whatsappUrl = `https://wa.me/?text=${message}`;
+
+                // Open WhatsApp in a new window/tab
+                window.open(whatsappUrl, '_blank');
             }
         });
 
