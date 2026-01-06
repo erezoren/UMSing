@@ -305,8 +305,8 @@
                 // Create the shareable URL with the file parameter
                 const shareableUrl = `${baseUrl}?file=${encodeURIComponent(currentAudioFile)}`;
 
-                // Create WhatsApp share message
-                const message = encodeURIComponent(`UMSing\n${shareableUrl}`);
+                // Create WhatsApp share message (just the URL, no prefix text)
+                const message = encodeURIComponent(shareableUrl);
                 const whatsappUrl = `https://wa.me/?text=${message}`;
 
                 // Open WhatsApp in a new window/tab
